@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agency Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f0f2f5; height: 100vh; overflow: hidden; }
+
+        /* Login Screen */
+        #login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: #2c3e50; }
+        .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; }
+        .login-box h2 { margin-bottom: 20px; color: #333; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 5px; color: #666; font-size: 14px; }
+        .input-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; outline: none; }
+        .btn-primary { width: 100%; padding: 10px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        .btn-primary:hover { background: #2980b9; }
+
+        /* App Layout */
+        #app-layout { display: none; height: 100vh; display: flex; flex-direction: row; }
+        
+        /* Main Content (Left Side) */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; background: #f4f7f6; }
+        
+        /* Right Sidebar Menu */
+        .right-sidebar { width: 250px; background-color: #2c3e50; color: white; display: flex; flex-direction: column; padding: 20px 0; }
+        .right-sidebar h3 { text-align: center; padding: 0 15px 20px 15px; border-bottom: 1px solid #34495e; margin-bottom: 10px; }
+        .user-role { text-align: center; font-size: 12px; color: #1abc9c; margin-top: -15px; margin-bottom: 20px; }
+        
+        .menu-btn { background: none; color: white; border: none; padding: 15px 20px; text-align: right; font-size: 16px; cursor: pointer; transition: 0.3s; border-bottom: 1px solid #34495e; }
+        .menu-btn:hover, .menu-btn.active { background-color: #1abc9c; }
+        .logout-btn { margin-top: auto; border-top: 1px solid #34495e; color: #e74c3c; font-weight: bold; }
+
+        /* Views */
+        .view-section { display: none; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .view-section.active { display: block; }
+        .view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        
+        /* Forms & Tables */
+        .form-row { display: flex; gap: 10px; margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #eee; }
+        .form-row input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn-success { padding: 10px 15px; background: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #34495e; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+        
+        /* Badges */
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; }
+        .badge.main { background: #e67e22; }
+        .badge.sub { background: #9b59b6; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. LOGIN SCREEN -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>System Login</h2>
+            <p style="font-size:12px; color:#888; margin-bottom:15px;">Main Agency: admin / admin123</p>
+            <div class="input-group">
+                <label>User ID</label>
+                <input type="text" id="login-id" placeholder="Enter User ID">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="login-pass" placeholder="Enter Password">
+            </div>
+            <button class="btn-primary" onclick="login()">Login</button>
+        </div>
+    </div>
+
+    <!-- 2. APP LAYOUT (Hidden until logged in) -->
+    <div id="app-layout" style="display: none;">
+        
+        <!-- Left Side: Main Content -->
+        <div class="main-content">
+            
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="view-section active">
+                <h1>Dashboard</h1>
+                <p>Welcome back! Please select an option from the right menu.</p>
+                <div style="margin-top: 20px; padding: 20px; background: #e8f4f8; border-radius: 8px;">
+                    <h3 id="dash-stats-title">System Status</h3>
+                    <p style="margin-top: 10px;">Total Hosts: <strong id="total-hosts-count">0</strong></p>
+                </div>
+            </div>
+
+            <!-- Hosts View -->
+            <div id="hosts-view" class="view-section">
+                <div class="view-header">
+                    <h1>Host Management</h1>
+                </div>
+                
+                <!-- Add Host Form -->
+                <div class="form-row">
+                    <input type="text" id="host-name" placeholder="Host Name">
+                    <input type="text" id="host-lang" placeholder="Language (e.g. Hindi, English)">
+                    <input type="text" id="host-number" placeholder="Mobile Number">
+                    <input type="text" id="host-userid" placeholder="Generate User ID (e.g. HST001)">
+                    <button class="btn-success" onclick="addHost()">+ Add Host</button>
+                </div>
+
+                <table id="hosts-table">
+                    <thead>
+                        <tr>
+                            <th>Host Name</th>
+                            <th>Language</th>
+                            <th>Number</th>
+                            <th>User ID</th>
+                            <th>Added By</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hosts-tbody">
+                        <!-- Dynamic Content -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Sub-Agencies View (Only for Main Agency) -->
+            <div id="agencies-view" class="view-section">
+                <div class="view-header">
+                    <h1>Sub-Agencies Management</h1>
+                </div>
+                <p style="color: #666; margin-bottom:15px;">Create Sub-Agencies with limited access. They can login and manage their own hosts.</p>
+                
+                <div class="form-row">
+                    <input type="text" id="sub-name" placeholder="Agency Name">
+                    <input type="text" id="sub-userid" placeholder="Login ID">
+                    <input type="text" id="sub-pass" placeholder="Password">
+                    <button class="btn-success" onclick="addSubAgency()">+ Create Agency</button>
+                </div>
+
+                <table id="agencies-table">
+                    <thead>
+                        <tr>
+                            <th>Agency Name</th>
+                            <th>Login ID</th>
+                            <th>Password</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="agencies-tbody">
+                        <!-- Dynamic Content -->
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- Right Side: Sidebar Navigation -->
+        <div class="right-sidebar">
+            <h3 id="sidebar-name">Agency Panel</h3>
+            <div class="user-role" id="sidebar-role">Main Agency</div>
+            
+            <button class="menu-btn active" onclick="switchView('dashboard-view', this)">Dashboard</button>
+            <button class="menu-btn" onclick="switchView('hosts-view', this)">Hosts</button>
+            <button class="menu-btn" id="menu-agencies" onclick="switchView('agencies-view', this)">Sub-Agencies</button>
+            <button class="menu-btn logout-btn" onclick="logout()">Logout</button>
+        </div>
+
+    </div>
+
+    <!-- 3. JAVASCRIPT LOGIC -->
+    <script>
+        // Data Storage Arrays
+        let subAgencies = JSON.parse(localStorage.getItem('subAgencies')) || [];
+        let hosts = JSON.parse(localStorage.getItem('hosts')) || [];
+        let currentUser = null; // Will store logged in user info
+
+        // Check if already logged in on page load
+        window.onload = function() {
+            let session = sessionStorage.getItem('loggedInUser');
+            if(session) {
+                currentUser = JSON.parse(session);
+                showApp();
+            }
+        }
+
+        // --- LOGIN LOGIC ---
+        function login() {
+            let id = document.getElementById('login-id').value;
+            let pass = document.getElementById('login-pass').value;
+
+            if(id === 'admin' && pass === 'admin123') {
+                // Main Agency Login
+                currentUser = { role: 'MAIN', name: 'Super Admin', id: 'admin' };
+                sessionStorage.setItem('loggedInUser', JSON.stringify(currentUser));
+                showApp();
+            } else {
+                // Check in Sub-Agencies
+                let agency = subAgencies.find(a => a.id === id && a.pass === pass);
+                if(agency) {
+                    currentUser = { role: 'SUB', name: agency.name, id: agency.id };
+                    sessionStorage.setItem('loggedInUser', JSON.stringify(currentUser));
+                    showApp();
+                } else {
+                    alert('Invalid ID or Password!');
+                }
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('loggedInUser');
+            location.reload();
+        }
+
+        // --- UI & PERMISSIONS ---
+        function showApp() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-layout').style.display = 'flex';
+            
+            // Set Sidebar Text
+            document.getElementById('sidebar-name').innerText = currentUser.name;
+            document.getElementById('sidebar-role').innerText = currentUser.role === 'MAIN' ? 'Main Agency' : 'Sub-Agency';
+
+            // Hide Sub-Agency Tab if logged in user is a Sub-Agency
+            if(currentUser.role === 'SUB') {
+                document.getElementById('menu-agencies').style.display = 'none';
+            } else {
+                document.getElementById('menu-agencies').style.display = 'block';
+                loadAgencies();
+            }
+
+            loadHosts();
+            switchView('dashboard-view', document.querySelector('.menu-btn')); // Default view
+        }
+
+        function switchView(viewId, btnElement) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+        }
+
+        // --- HOST MANAGEMENT ---
+        function addHost() {
+            let name = document.getElementById('host-name').value;
+            let lang = document.getElementById('host-lang').value;
+            let num = document.getElementById('host-number').value;
+            let uid = document.getElementById('host-userid').value;
+
+            if(!name || !lang || !num || !uid) return alert('Please fill all Host details!');
+
+            hosts.push({ name, lang, num, uid, addedBy: currentUser.id, addedByName: currentUser.name });
+            localStorage.setItem('hosts', JSON.stringify(hosts)); // Save to memory
+            
+            // Clear inputs
+            document.getElementById('host-name').value = '';
+            document.getElementById('host-lang').value = '';
+            document.getElementById('host-number').value = '';
+            document.getElementById('host-userid').value = '';
+            
+            loadHosts();
+        }
+
+        function loadHosts() {
+            let tbody = document.getElementById('hosts-tbody');
+            tbody.innerHTML = '';
+            
+            let displayHosts = hosts;
+            // If Sub-Agency, only show their own hosts
+            if(currentUser.role === 'SUB') {
+                displayHosts = hosts.filter(h => h.addedBy === currentUser.id);
+            }
+
+            document.getElementById('total-hosts-count').innerText = displayHosts.length;
+
+            displayHosts.forEach(h => {
+                let badgeClass = h.addedBy === 'admin' ? 'main' : 'sub';
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${h.name}</strong></td>
+                        <td>${h.lang}</td>
+                        <td>${h.num}</td>
+                        <td>${h.uid}</td>
+                        <td><span class="badge ${badgeClass}">${h.addedByName}</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- SUB-AGENCY MANAGEMENT (MAIN ADMIN ONLY) ---
+        function addSubAgency() {
+            let name = document.getElementById('sub-name').value;
+            let id = document.getElementById('sub-userid').value;
+            let pass = document.getElementById('sub-pass').value;
+
+            if(!name || !id || !pass) return alert('Please fill all Agency details!');
+            
+            // Check if ID exists
+            if(subAgencies.find(a => a.id === id) || id === 'admin') {
+                return alert('This Login ID already exists. Try another.');
+            }
+
+            subAgencies.push({ name, id, pass });
+            localStorage.setItem('subAgencies', JSON.stringify(subAgencies));
+            
+            document.getElementById('sub-name').value = '';
+            document.getElementById('sub-userid').value = '';
+            document.getElementById('sub-pass').value = '';
+            
+            loadAgencies();
+            alert('Sub-Agency Created Successfully! They can now login.');
+        }
+
+        function loadAgencies() {
+            let tbody = document.getElementById('agencies-tbody');
+            tbody.innerHTML = '';
+            
+            subAgencies.forEach(a => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${a.name}</strong></td>
+                        <td>${a.id}</td>
+                        <td>${a.pass}</td>
+                        <td><span class="badge main">Active</span></td>
+                    </tr>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
